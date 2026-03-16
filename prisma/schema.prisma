@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+
+  decks    Deck[]
+  sessions StudySession[]
+}
+
+model Deck {
+  id         String     @id @default(cuid())
+  title      String
+  sourceType SourceType
+  createdAt  DateTime   @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cards    Card[]
+  sessions StudySession[]
+}
+
+model Card {
+  id            String @id @default(cuid())
+  question      String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String // "A", "B", "C" ou "D"
+
+  deckId String
+  deck   Deck   @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}
+
+model StudySession {
+  id        String   @id @default(cuid())
+  score     Int
+  total     Int
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  deckId String
+  deck   Deck   @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}
+
+enum SourceType {
+  TEXT
+  PDF
+  URL
+  TOPIC
+}
