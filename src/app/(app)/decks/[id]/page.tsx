@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 
 interface Card {
@@ -28,35 +28,55 @@ const sourceLabels: Record<string, string> = {
 }
 
 const optionLabels = ["A", "B", "C", "D"]
+const optionKeys = ["optionA", "optionB", "optionC", "optionD"] as const
 
 export default function DeckPage() {
     const { id } = useParams<{ id: string }>()
-    const router = useRouter()
 
     const [deck, setDeck] = useState<Deck | null>(null)
-    const [confirmDelete, setConfirmDelete] = useState(false)
-    const [deleting, setDeleting] = useState(false)
     const [cards, setCards] = useState<Card[]>([])
+    const [editingCard, setEditingCard] = useState<Card | null>(null)
+    const [editForm, setEditForm] = useState<Omit<Card, "id" | "correctOption">>({
+        question: "", optionA: "", optionB: "", optionC: "", optionD: "",
+    })
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         fetch(`/api/decks/${id}`)
             .then((r) => r.json())
-            .then((data) => {
-                setDeck(data)
-                setCards(data.cards)
-            })
+            .then((data) => { setDeck(data); setCards(data.cards) })
     }, [id])
+
+    function openEdit(card: Card) {
+        setEditingCard(card)
+        setEditForm({
+            question: card.question,
+            optionA: card.optionA,
+            optionB: card.optionB,
+            optionC: card.optionC,
+            optionD: card.optionD,
+        })
+    }
+
+    async function handleSaveEdit() {
+        if (!editingCard) return
+        setSaving(true)
+
+        const res = await fetch(`/api/cards/${editingCard.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editForm),
+        })
+
+        const updated = await res.json()
+        setCards((prev) => prev.map((c) => c.id === updated.id ? updated : c))
+        setEditingCard(null)
+        setSaving(false)
+    }
 
     async function handleDeleteCard(cardId: string) {
         await fetch(`/api/cards/${cardId}`, { method: "DELETE" })
         setCards((prev) => prev.filter((c) => c.id !== cardId))
-    }
-
-    async function handleDelete() {
-        setDeleting(true)
-        await fetch(`/api/decks/${id}`, { method: "DELETE" })
-        router.push("/dashboard")
-        router.refresh()
     }
 
     if (!deck) {
@@ -69,27 +89,58 @@ export default function DeckPage() {
 
     return (
         <div>
-            {/* Modal de confirmação */}
-            {confirmDelete && (
+            {/* Modal de edição */}
+            {editingCard && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-                    <div className="bg-[#1a1814] border border-amber-600/20 rounded-2xl p-8 max-w-sm w-full">
-                        <h2 className="font-serif text-lg text-amber-50 mb-2">Deletar baralho?</h2>
-                        <p className="text-sm text-amber-100/40 mb-6">
-                            "{deck.title}" e todos os seus cards serão deletados permanentemente.
-                        </p>
-                        <div className="flex gap-2">
+                    <div className="bg-[#1a1814] border border-amber-600/20 rounded-2xl p-8 w-full max-w-md">
+                        <h2 className="font-serif text-lg text-amber-50 mb-6">Editar card</h2>
+
+                        <div className="space-y-4">
+                            {/* Pergunta */}
+                            <div>
+                                <label className="block text-[10px] tracking-widest uppercase text-amber-100/35 mb-2">
+                                    Pergunta
+                                </label>
+                                <textarea
+                                    rows={2}
+                                    value={editForm.question}
+                                    onChange={(e) => setEditForm((p) => ({ ...p, question: e.target.value }))}
+                                    className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-amber-600/20 focus:border-amber-600/50 rounded-lg text-amber-50 text-sm placeholder-amber-100/20 outline-none transition-colors resize-none"
+                                />
+                            </div>
+
+                            {/* Opções */}
+                            {optionKeys.map((key, i) => (
+                                <div key={key}>
+                                    <label className="block text-[10px] tracking-widest uppercase text-amber-100/35 mb-2">
+                                        Opção {optionLabels[i]}
+                                        {editingCard.correctOption === optionLabels[i] && (
+                                            <span className="ml-2 text-emerald-400 normal-case tracking-normal">✓ correta</span>
+                                        )}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editForm[key]}
+                                        onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                                        className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-amber-600/20 focus:border-amber-600/50 rounded-lg text-amber-50 text-sm outline-none transition-colors"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
                             <button
-                                onClick={() => setConfirmDelete(false)}
+                                onClick={() => setEditingCard(null)}
                                 className="flex-1 py-2.5 border border-amber-600/20 rounded-lg text-amber-100/50 text-sm hover:border-amber-600/40 transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleDelete}
-                                disabled={deleting}
-                                className="flex-1 py-2.5 bg-red-500/80 hover:bg-red-500 disabled:opacity-50 rounded-lg text-white text-sm font-medium transition-colors"
+                                onClick={handleSaveEdit}
+                                disabled={saving}
+                                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors"
                             >
-                                {deleting ? "Deletando..." : "Sim, deletar"}
+                                {saving ? "Salvando..." : "Salvar"}
                             </button>
                         </div>
                     </div>
@@ -113,32 +164,32 @@ export default function DeckPage() {
                         </span>
                         <h1 className="font-serif text-2xl text-amber-50 leading-snug">{deck.title}</h1>
                         <p className="text-xs text-amber-100/30 mt-1">
-                            {deck.cards.length} cards · criado em {new Date(deck.createdAt).toLocaleDateString("pt-BR")}
+                            {cards.length} cards · criado em {new Date(deck.createdAt).toLocaleDateString("pt-BR")}
                         </p>
                     </div>
                 </div>
-
-                {/* Ações */}
-                <div className="flex items-center gap-2">
-                    <Link
-                        href={`/decks/${id}/study`}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="#0d0c0a" viewBox="0 0 24 24">
-                            <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                        Iniciar quiz
-                    </Link>
-                </div>
+                <Link
+                    href={`/decks/${id}/study`}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors shrink-0"
+                >
+                    <svg className="w-3.5 h-3.5" fill="#0d0c0a" viewBox="0 0 24 24">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Iniciar quiz
+                </Link>
             </div>
 
             {/* Grid de cards */}
             <div className="grid grid-cols-2 gap-3">
                 {cards.map((card, index) => (
-                    <div key={card.id} className="group relative bg-white/[0.03] border border-amber-600/15 rounded-xl p-5">
+                    <div
+                        key={card.id}
+                        className="group relative bg-white/[0.03] border border-amber-600/15 hover:border-amber-600/30 rounded-xl p-5 cursor-pointer transition-all"
+                        onClick={() => openEdit(card)}
+                    >
                         {/* Botão X */}
                         <button
-                            onClick={() => handleDeleteCard(card.id)}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id) }}
                             className="absolute top-3 right-3 w-5 h-5 rounded flex items-center justify-center text-amber-100/20 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
                         >
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
