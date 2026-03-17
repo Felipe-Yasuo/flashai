@@ -1,12 +1,13 @@
+//src/app/api/generate/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import OpenAI from "openai"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { SourceType } from "@/generated/prisma"
 
-const ollama = new OpenAI({
-    baseURL: "http://localhost:11434/v1",
-    apiKey: "ollama", // qualquer string, o Ollama não valida
+const groq = new OpenAI({
+    baseURL: "https://api.groq.com/openai/v1",
+    apiKey: process.env.GROQ_API_KEY!,
 })
 
 export async function POST(req: NextRequest) {
@@ -52,18 +53,14 @@ Responda SOMENTE com um array JSON válido, sem explicações, sem markdown, sem
 ]`
 
     try {
-        const completion = await ollama.chat.completions.create({
-            model: "llama3.2",
+        const completion = await groq.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         })
 
         const rawText = completion.choices[0].message.content ?? ""
-        console.log("=== RAW TEXT ===")
-        console.log(rawText)
-        console.log("=== FIM ===")
 
-        // Extrai só o array JSON do texto
         const match = rawText.match(/\[[\s\S]*\]/)
         if (!match) {
             return NextResponse.json({ error: "A IA não retornou cards válidos" }, { status: 500 })
@@ -71,7 +68,6 @@ Responda SOMENTE com um array JSON válido, sem explicações, sem markdown, sem
 
         let cleaned = match[0]
 
-        // Corrige aspas ausentes em valores
         cleaned = cleaned.replace(/:\s*([^",\]\[{}\n][^,\]\[{}\n]*?)(\s*[,\}])/g, (_, val, end) => {
             const trimmed = val.trim()
             if (trimmed.startsWith('"') || trimmed === 'true' || trimmed === 'false' || !isNaN(Number(trimmed))) {
@@ -116,7 +112,7 @@ Responda SOMENTE com um array JSON válido, sem explicações, sem markdown, sem
 
             return newDeck
         }, {
-            timeout: 30000, // 30 segundos
+            timeout: 30000,
         })
 
         return NextResponse.json({ deckId: deck.id })
