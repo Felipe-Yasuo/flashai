@@ -24,6 +24,9 @@ model Deck {
   sourceType SourceType
   createdAt  DateTime   @default(now())
 
+  isPublic   Boolean @default(false)
+  shareToken String? @unique
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 

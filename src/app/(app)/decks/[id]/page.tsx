@@ -32,7 +32,9 @@ const optionKeys = ["optionA", "optionB", "optionC", "optionD"] as const
 
 export default function DeckPage() {
     const { id } = useParams<{ id: string }>()
-
+    const [isPublic, setIsPublic] = useState(false)
+    const [shareToken, setShareToken] = useState<string | null>(null)
+    const [sharing, setSharing] = useState(false)
     const [deck, setDeck] = useState<Deck | null>(null)
     const [cards, setCards] = useState<Card[]>([])
     const [editingCard, setEditingCard] = useState<Card | null>(null)
@@ -44,8 +46,27 @@ export default function DeckPage() {
     useEffect(() => {
         fetch(`/api/decks/${id}`)
             .then((r) => r.json())
-            .then((data) => { setDeck(data); setCards(data.cards) })
+            .then((data) => {
+                setDeck(data)
+                setCards(data.cards)
+                setIsPublic(data.isPublic)
+                setShareToken(data.shareToken)
+            })
     }, [id])
+    async function handleShare() {
+        setSharing(true)
+        const res = await fetch(`/api/decks/${id}/share`, { method: "POST" })
+        const data = await res.json()
+        setIsPublic(data.isPublic)
+        setShareToken(data.shareToken)
+        setSharing(false)
+
+        if (data.isPublic && data.shareToken) {
+            const url = `${window.location.origin}/shared/${data.shareToken}`
+            await navigator.clipboard.writeText(url)
+            alert("Link copiado pra área de transferência!")
+        }
+    }
 
     function openEdit(card: Card) {
         setEditingCard(card)
@@ -168,15 +189,34 @@ export default function DeckPage() {
                         </p>
                     </div>
                 </div>
-                <Link
-                    href={`/decks/${id}/study`}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors shrink-0"
-                >
-                    <svg className="w-3.5 h-3.5" fill="#0d0c0a" viewBox="0 0 24 24">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                    Iniciar quiz
-                </Link>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleShare}
+                        disabled={sharing}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${isPublic
+                                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+                                : "border border-amber-600/25 text-amber-100/50 hover:border-amber-600/40 hover:text-amber-100/80"
+                            }`}
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+                            {isPublic
+                                ? <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.101 1.102" />
+                                : <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            }
+                        </svg>
+                        {sharing ? "..." : isPublic ? "Público" : "Compartilhar"}
+                    </button>
+
+                    <Link
+                        href={`/decks/${id}/study`}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="#0d0c0a" viewBox="0 0 24 24">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        Iniciar quiz
+                    </Link>
+                </div>
             </div>
 
             {/* Grid de cards */}
