@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.input-style {
+  @apply px-3.5 py-2.5 bg-white/[0.04] border border-amber-600/20 focus:border-amber-600/50 rounded-lg text-amber-50 text-sm placeholder-amber-100/20 outline-none transition-colors;
+}
+
+select.input-style option {
+  background: #1c1a16;
+  color: #fef3c7;
+}
