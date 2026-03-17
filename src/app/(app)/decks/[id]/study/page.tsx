@@ -56,7 +56,6 @@ export default function StudyPage() {
     function handleAnswer(letter: string) {
         if (chosen) return
         setChosen(letter)
-        if (letter === card.correctOption) setScore((s) => s + 1)
     }
 
     async function handleNext() {
