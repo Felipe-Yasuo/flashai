@@ -53,7 +53,7 @@ Responda SOMENTE com um array JSON válido, sem explicações, sem markdown, sem
 
     try {
         const completion = await ollama.chat.completions.create({
-            model: "qwen2.5:0.5b",
+            model: "llama3.2",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         })
