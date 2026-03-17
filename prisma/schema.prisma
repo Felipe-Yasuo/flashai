@@ -38,7 +38,10 @@ model Card {
   optionB       String
   optionC       String
   optionD       String
-  correctOption String // "A", "B", "C" ou "D"
+  correctOption String
+
+  nextReview DateTime?
+  interval   Int       @default(1)
 
   deckId String
   deck   Deck   @relation(fields: [deckId], references: [id], onDelete: Cascade)

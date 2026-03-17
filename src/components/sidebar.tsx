@@ -21,6 +21,15 @@ const navItems = [
         ),
     },
     {
+        label: "Revisão",
+        href: "/review",
+        icon: (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+                <path d="M12 8v4l3 3M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+            </svg>
+        ),
+    },
+    {
         label: "Histórico",
         href: "/history",
         icon: (
