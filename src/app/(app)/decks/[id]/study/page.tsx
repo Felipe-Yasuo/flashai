@@ -50,7 +50,7 @@ export default function StudyPage() {
 
     const cards = deck.cards
     const card = cards[current]
-    const progress = ((current) / cards.length) * 100
+    const progress = ((current + 1) / cards.length) * 100
     const options = [card.optionA, card.optionB, card.optionC, card.optionD]
 
     function handleAnswer(letter: string) {
@@ -60,17 +60,25 @@ export default function StudyPage() {
     }
 
     async function handleNext() {
+        const isCorrect = chosen === card.correctOption
+        const newScore = isCorrect ? score + 1 : score
+
         if (current + 1 >= cards.length) {
-            // Fim do quiz — salva sessão
             setSaving(true)
             await fetch("/api/sessions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ deckId: id, score: score + (chosen === card.correctOption ? 1 : 0), total: cards.length }),
+                body: JSON.stringify({
+                    deckId: id,
+                    score: newScore,
+                    total: cards.length,
+                }),
             })
             setSaving(false)
+            setScore(newScore)
             setFinished(true)
         } else {
+            setScore(newScore)
             setCurrent((c) => c + 1)
             setChosen(null)
         }
@@ -83,19 +91,18 @@ export default function StudyPage() {
         setFinished(false)
     }
 
-    const finalScore = score + (chosen === card?.correctOption ? 1 : 0)
 
     if (finished) {
-        const pct = Math.round((finalScore / cards.length) * 100)
-        const emoji = pct === 100 ? "🏆" : pct >= 70 ? "🎉" : pct >= 40 ? "📚" : "💪"
 
+        const pct = Math.round((score / cards.length) * 100)
+        const emoji = pct === 100 ? "🏆" : pct >= 70 ? "🎉" : pct >= 40 ? "📚" : "💪"
         return (
             <div className="max-w-lg mx-auto">
                 <div className="bg-white/[0.03] border border-amber-600/15 rounded-2xl p-12 text-center">
                     <div className="text-5xl mb-5">{emoji}</div>
                     <h1 className="font-serif text-2xl text-amber-50 mb-2">Quiz concluído!</h1>
                     <p className="text-sm text-amber-100/40 mb-8">Veja como você foi</p>
-                    <p className="text-6xl font-medium text-amber-400 leading-none">{finalScore}</p>
+                    <p className="text-6xl font-medium text-amber-400 leading-none">{score}</p>
                     <p className="text-sm text-amber-100/30 mt-2 mb-10">de {cards.length} corretos</p>
                     <div className="flex gap-2">
                         <Link
@@ -163,10 +170,10 @@ export default function StudyPage() {
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all ${style}`}
                         >
                             <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium shrink-0 ${revealed && isCorrect
-                                    ? "bg-emerald-500/25 text-emerald-400"
-                                    : revealed && isChosen && !isCorrect
-                                        ? "bg-red-500/20 text-red-400"
-                                        : "bg-white/[0.05] text-amber-100/40"
+                                ? "bg-emerald-500/25 text-emerald-400"
+                                : revealed && isChosen && !isCorrect
+                                    ? "bg-red-500/20 text-red-400"
+                                    : "bg-white/[0.05] text-amber-100/40"
                                 }`}>
                                 {letter}
                             </span>
