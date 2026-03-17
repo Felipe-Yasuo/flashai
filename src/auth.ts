@@ -1,14 +1,13 @@
+// src/auth.ts
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { authConfig } from "@/auth.config"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-    session: { strategy: "jwt" },
-    pages: {
-        signIn: "/login",
-    },
+    ...authConfig,
     providers: [
         Google,
         Credentials({
@@ -32,22 +31,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 if (!passwordMatch) return null
 
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                }
+                return { id: user.id, email: user.email, name: user.name }
             },
         }),
     ],
     callbacks: {
         async jwt({ token, user, account }) {
-            // Login com Credentials
-            if (user && account?.provider === "credentials") {
-                token.id = user.id
-            }
+            if (user && account?.provider === "credentials") token.id = user.id
 
-            // Login com Google — busca ou cria o usuário no banco
             if (account?.provider === "google" && token.email) {
                 let dbUser = await prisma.user.findUnique({
                     where: { email: token.email },
@@ -58,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         data: {
                             email: token.email,
                             name: token.name ?? "Usuário",
-                            password: "", // Google users não têm senha
+                            password: "",
                         },
                     })
                 }
