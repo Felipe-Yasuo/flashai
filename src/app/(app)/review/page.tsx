@@ -1,4 +1,3 @@
-// src/app/(app)/review/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -34,15 +33,12 @@ export default function ReviewPage() {
 
     async function handleDifficulty(difficulty: "easy" | "hard" | "again") {
         const card = cards[current]
-
         await fetch(`/api/cards/${card.id}/review`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ difficulty }),
         })
-
         setReviewed((r) => r + 1)
-
         if (current + 1 >= cards.length) {
             setDone(true)
         } else {
@@ -53,7 +49,7 @@ export default function ReviewPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64 text-amber-100/30 text-sm">
+            <div className="flex items-center justify-center h-64 text-sm" style={{ color: "var(--ink-faint)" }}>
                 Carregando...
             </div>
         )
@@ -61,11 +57,17 @@ export default function ReviewPage() {
 
     if (cards.length === 0) {
         return (
-            <div className="max-w-lg mx-auto text-center py-20">
-                <p className="text-4xl mb-4">🎉</p>
-                <h1 className="font-serif text-2xl text-amber-50 mb-2">Tudo em dia!</h1>
-                <p className="text-sm text-amber-100/40 mb-8">Nenhum card pra revisar hoje. Volte amanhã!</p>
-                <Link href="/dashboard" className="text-amber-500 hover:text-amber-400 text-sm underline underline-offset-2">
+            <div className="max-w-md mx-auto text-center py-24">
+                <div className="text-5xl mb-6">🎉</div>
+                <h1 className="font-display text-3xl mb-2" style={{ color: "var(--ink)" }}>Tudo em dia!</h1>
+                <p className="text-sm mb-8" style={{ color: "var(--ink-muted)" }}>
+                    Nenhum card pra revisar hoje. Volte amanhã!
+                </p>
+                <Link
+                    href="/dashboard"
+                    className="inline-flex px-5 py-2.5 rounded-lg text-sm font-semibold"
+                    style={{ background: "var(--accent)", color: "#0e0d0b" }}
+                >
                     Voltar pro dashboard
                 </Link>
             </div>
@@ -74,14 +76,20 @@ export default function ReviewPage() {
 
     if (done) {
         return (
-            <div className="max-w-lg mx-auto text-center">
-                <div className="bg-white/[0.03] border border-amber-600/15 rounded-2xl p-12">
-                    <p className="text-5xl mb-5">✅</p>
-                    <h1 className="font-serif text-2xl text-amber-50 mb-2">Revisão concluída!</h1>
-                    <p className="text-sm text-amber-100/40 mb-8">{reviewed} cards revisados hoje</p>
+            <div className="max-w-md mx-auto">
+                <div
+                    className="rounded-2xl p-12 text-center"
+                    style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
+                >
+                    <div className="text-5xl mb-6">✅</div>
+                    <h1 className="font-display text-3xl mb-1" style={{ color: "var(--ink)" }}>Revisão concluída!</h1>
+                    <p className="text-sm mb-2" style={{ color: "var(--ink-muted)" }}>Excelente trabalho hoje</p>
+                    <p className="font-display text-5xl mb-8" style={{ color: "var(--accent-bright)" }}>{reviewed}</p>
+                    <p className="text-xs mb-8" style={{ color: "var(--ink-faint)" }}>cards revisados</p>
                     <Link
                         href="/dashboard"
-                        className="inline-flex px-6 py-3 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors"
+                        className="inline-flex px-6 py-3 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+                        style={{ background: "var(--accent)", color: "#0e0d0b" }}
                     >
                         Voltar pro dashboard
                     </Link>
@@ -93,25 +101,39 @@ export default function ReviewPage() {
     const card = cards[current]
     const options = [card.optionA, card.optionB, card.optionC, card.optionD]
     const answered = !!chosen
+    const progress = (current / cards.length) * 100
 
     return (
         <div className="max-w-lg mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-3">
                 <div>
-                    <p className="text-xs text-amber-100/30">{card.deck.title}</p>
-                    <p className="text-[10px] tracking-widest uppercase text-amber-100/20 mt-0.5">
+                    <p className="text-xs font-medium" style={{ color: "var(--ink-muted)" }}>{card.deck.title}</p>
+                    <p className="text-[10px] tracking-widest uppercase font-semibold mt-0.5" style={{ color: "var(--ink-faint)" }}>
                         {current + 1} de {cards.length} pra hoje
                     </p>
                 </div>
-                <Link href="/dashboard" className="text-xs text-amber-100/30 hover:text-amber-100/60 transition-colors">
+                <Link href="/dashboard" className="text-xs transition-colors" style={{ color: "var(--ink-faint)" }}>
                     Sair
                 </Link>
             </div>
 
+            {/* Progress */}
+            <div className="h-0.5 rounded-full mb-8 overflow-hidden" style={{ background: "var(--ink-ghost)" }}>
+                <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%`, background: "var(--accent)" }}
+                />
+            </div>
+
             {/* Pergunta */}
-            <div className="bg-white/[0.03] border border-amber-600/15 rounded-2xl p-8 mb-4">
-                <p className="font-serif text-lg text-amber-50 leading-relaxed">{card.question}</p>
+            <div
+                className="rounded-2xl p-8 mb-4"
+                style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
+            >
+                <p className="font-display text-xl leading-relaxed" style={{ color: "var(--ink)" }}>
+                    {card.question}
+                </p>
             </div>
 
             {/* Alternativas */}
@@ -121,13 +143,26 @@ export default function ReviewPage() {
                     const isChosen = chosen === letter
                     const isCorrect = card.correctOption === letter
 
-                    let style = "border-amber-600/15 bg-white/[0.02] text-amber-100/60 hover:border-amber-600/35 hover:bg-white/[0.04] hover:text-amber-100/90"
+                    let borderColor = "var(--rule)"
+                    let bgColor = "var(--bg-card)"
+                    let textColor = "var(--ink-muted)"
+                    let badgeBg = "var(--ink-ghost)"
+                    let badgeColor = "var(--ink-faint)"
 
                     if (answered) {
-                        if (isChosen && isCorrect) style = "border-emerald-500/40 bg-emerald-500/8 text-amber-100/90"
-                        else if (isChosen && !isCorrect) style = "border-red-500/40 bg-red-500/8 text-amber-100/50"
-                        else if (!isChosen && isCorrect) style = "border-emerald-500/30 bg-emerald-500/5 text-amber-100/70"
-                        else style = "border-amber-600/10 bg-transparent text-amber-100/30"
+                        if (isChosen && isCorrect) {
+                            borderColor = "rgba(16,185,129,0.4)"; bgColor = "rgba(16,185,129,0.06)"
+                            textColor = "var(--ink)"; badgeBg = "rgba(16,185,129,0.2)"; badgeColor = "#34d399"
+                        } else if (isChosen && !isCorrect) {
+                            borderColor = "rgba(239,68,68,0.4)"; bgColor = "rgba(239,68,68,0.06)"
+                            textColor = "var(--ink-muted)"; badgeBg = "rgba(239,68,68,0.2)"; badgeColor = "#f87171"
+                        } else if (!isChosen && isCorrect) {
+                            borderColor = "rgba(16,185,129,0.25)"; bgColor = "rgba(16,185,129,0.03)"
+                            textColor = "var(--ink-muted)"; badgeBg = "rgba(16,185,129,0.12)"; badgeColor = "#34d399"
+                        } else {
+                            borderColor = "var(--rule)"; bgColor = "transparent"
+                            textColor = "var(--ink-faint)"; badgeBg = "transparent"; badgeColor = "var(--ink-ghost)"
+                        }
                     }
 
                     return (
@@ -135,12 +170,13 @@ export default function ReviewPage() {
                             key={letter}
                             onClick={() => !answered && setChosen(letter)}
                             disabled={answered}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all ${style}`}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all"
+                            style={{ borderColor, background: bgColor, color: textColor }}
                         >
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium shrink-0 ${answered && isCorrect ? "bg-emerald-500/25 text-emerald-400"
-                                    : answered && isChosen && !isCorrect ? "bg-red-500/20 text-red-400"
-                                        : "bg-white/[0.05] text-amber-100/40"
-                                }`}>
+                            <span
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-semibold shrink-0"
+                                style={{ background: badgeBg, color: badgeColor }}
+                            >
                                 {letter}
                             </span>
                             {option}
@@ -149,37 +185,29 @@ export default function ReviewPage() {
                 })}
             </div>
 
-            {/* Botões de dificuldade — aparecem após responder */}
+            {/* Dificuldade */}
             {answered && (
                 <div>
-                    <p className="text-[10px] tracking-widest uppercase text-amber-100/30 text-center mb-3">
+                    <p className="text-[10px] tracking-widest uppercase font-semibold text-center mb-3" style={{ color: "var(--ink-faint)" }}>
                         Como foi?
                     </p>
                     <div className="grid grid-cols-3 gap-2">
-                        <button
-                            onClick={() => handleDifficulty("again")}
-                            className="py-3 rounded-xl border border-red-500/25 bg-red-500/5 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors"
-                        >
-                            <span className="block text-lg mb-0.5">😵</span>
-                            Errei
-                            <span className="block text-[10px] text-red-400/60 mt-0.5">amanhã</span>
-                        </button>
-                        <button
-                            onClick={() => handleDifficulty("hard")}
-                            className="py-3 rounded-xl border border-amber-500/25 bg-amber-500/5 text-amber-400 text-xs font-medium hover:bg-amber-500/10 transition-colors"
-                        >
-                            <span className="block text-lg mb-0.5">😅</span>
-                            Difícil
-                            <span className="block text-[10px] text-amber-400/60 mt-0.5">3 dias</span>
-                        </button>
-                        <button
-                            onClick={() => handleDifficulty("easy")}
-                            className="py-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 text-emerald-400 text-xs font-medium hover:bg-emerald-500/10 transition-colors"
-                        >
-                            <span className="block text-lg mb-0.5">😎</span>
-                            Fácil
-                            <span className="block text-[10px] text-emerald-400/60 mt-0.5">7 dias</span>
-                        </button>
+                        {[
+                            { key: "again" as const, label: "Errei", sub: "amanhã", emoji: "😵", color: "#f87171", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)" },
+                            { key: "hard" as const, label: "Difícil", sub: "3 dias", emoji: "😅", color: "var(--accent-bright)", bg: "var(--accent-dim)", border: "var(--accent-border)" },
+                            { key: "easy" as const, label: "Fácil", sub: "7 dias", emoji: "😎", color: "#34d399", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)" },
+                        ].map(({ key, label, sub, emoji, color, bg, border }) => (
+                            <button
+                                key={key}
+                                onClick={() => handleDifficulty(key)}
+                                className="py-3 rounded-xl text-xs font-semibold transition-opacity hover:opacity-90"
+                                style={{ background: bg, border: `1px solid ${border}`, color }}
+                            >
+                                <span className="block text-lg mb-0.5">{emoji}</span>
+                                {label}
+                                <span className="block text-[10px] mt-0.5 opacity-60">{sub}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
             )}

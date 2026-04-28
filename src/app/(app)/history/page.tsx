@@ -1,4 +1,3 @@
-// src/app/(app)/history/page.tsx
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
@@ -16,30 +15,50 @@ export default async function HistoryPage() {
 
     return (
         <div>
-            <h1 className="font-serif text-2xl text-amber-50 mb-8">Histórico</h1>
+            <div className="mb-10">
+                <p className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-1" style={{ color: "var(--ink-faint)" }}>
+                    Seu progresso
+                </p>
+                <h1 className="font-display text-3xl" style={{ color: "var(--ink)" }}>Histórico</h1>
+            </div>
 
             {sessions.length === 0 ? (
-                <div className="text-center py-20 text-amber-100/25 text-sm">
-                    Nenhuma sessão ainda.{" "}
-                    <Link href="/new" className="text-amber-500 hover:text-amber-400 underline underline-offset-2">
-                        Estude um baralho!
+                <div
+                    className="rounded-2xl p-16 text-center"
+                    style={{ border: "1px dashed var(--rule)" }}
+                >
+                    <p className="font-display text-2xl mb-2" style={{ color: "var(--ink-faint)" }}>Nenhuma sessão ainda</p>
+                    <p className="text-sm mb-6" style={{ color: "var(--ink-ghost)" }}>Estude um baralho pra começar seu histórico.</p>
+                    <Link
+                        href="/new"
+                        className="inline-flex px-5 py-2.5 rounded-lg text-sm font-semibold"
+                        style={{ background: "var(--accent)", color: "#0e0d0b" }}
+                    >
+                        Criar baralho
                     </Link>
                 </div>
             ) : (
                 <div className="flex flex-col gap-2">
                     {sessions.map((s) => {
                         const pct = Math.round((s.score / s.total) * 100)
-                        const color = pct === 100 ? "text-emerald-400" : pct >= 70 ? "text-amber-400" : pct >= 40 ? "text-orange-400" : "text-red-400"
+                        const scoreColor = pct === 100
+                            ? "#34d399"
+                            : pct >= 70
+                                ? "var(--accent-bright)"
+                                : pct >= 40
+                                    ? "#fb923c"
+                                    : "#f87171"
 
                         return (
                             <Link
                                 key={s.id}
                                 href={`/decks/${s.deckId}`}
-                                className="flex items-center justify-between px-5 py-4 bg-white/[0.03] border border-amber-600/15 hover:border-amber-600/30 rounded-xl transition-all"
+                                className="hover-border flex items-center justify-between px-5 py-4 rounded-xl transition-all"
+                                style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
                             >
                                 <div>
-                                    <p className="text-sm font-medium text-amber-50 mb-0.5">{s.deck.title}</p>
-                                    <p className="text-xs text-amber-100/30">
+                                    <p className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{s.deck.title}</p>
+                                    <p className="text-xs" style={{ color: "var(--ink-faint)" }}>
                                         {new Date(s.createdAt).toLocaleDateString("pt-BR", {
                                             day: "2-digit",
                                             month: "short",
@@ -49,9 +68,9 @@ export default async function HistoryPage() {
                                         })}
                                     </p>
                                 </div>
-                                <div className="text-right">
-                                    <p className={`text-lg font-medium ${color}`}>{pct}%</p>
-                                    <p className="text-xs text-amber-100/30">{s.score}/{s.total} corretos</p>
+                                <div className="text-right shrink-0 ml-4">
+                                    <p className="font-display text-xl font-bold" style={{ color: scoreColor }}>{pct}%</p>
+                                    <p className="text-xs" style={{ color: "var(--ink-faint)" }}>{s.score}/{s.total} corretos</p>
                                 </div>
                             </Link>
                         )

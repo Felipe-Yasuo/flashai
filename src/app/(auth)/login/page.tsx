@@ -1,10 +1,8 @@
-// src/app/(auth)/login/page.tsx
 "use client"
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 
 type Mode = "login" | "register"
 
@@ -14,11 +12,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
 
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-    })
+    const [form, setForm] = useState({ name: "", email: "", password: "" })
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -36,14 +30,8 @@ export default function LoginPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             })
-
             const data = await res.json()
-
-            if (!res.ok) {
-                setError(data.error)
-                setLoading(false)
-                return
-            }
+            if (!res.ok) { setError(data.error); setLoading(false); return }
         }
 
         const result = await signIn("credentials", {
@@ -52,12 +40,7 @@ export default function LoginPage() {
             redirect: false,
         })
 
-        if (result?.error) {
-            setError("Email ou senha inválidos")
-            setLoading(false)
-            return
-        }
-
+        if (result?.error) { setError("Email ou senha inválidos"); setLoading(false); return }
         router.push("/dashboard")
         router.refresh()
     }
@@ -67,36 +50,78 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0d0c0a] flex items-center justify-center px-4">
-            {/* Orbs de fundo */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-amber-600 opacity-10 blur-[80px]" />
-                <div className="absolute -bottom-16 -left-16 w-[300px] h-[300px] rounded-full bg-amber-900 opacity-10 blur-[80px]" />
-            </div>
+        <main
+            className="min-h-screen flex"
+            style={{ background: "var(--bg)" }}
+        >
+            {/* Painel esquerdo — decorativo */}
+            <div
+                className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12 border-r"
+                style={{ borderColor: "var(--rule)", background: "var(--bg-card)" }}
+            >
+                <Logo />
 
-            <div className="relative w-full max-w-sm">
-                {/* Logo */}
-                <div className="flex items-center gap-3 mb-10">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-800 flex items-center justify-center">
-                        <svg className="w-4 h-4 stroke-amber-100" fill="none" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                    </div>
-                    <span className="font-serif text-xl text-amber-50 tracking-wide">FlashAI</span>
+                <div>
+                    <p
+                        className="font-display text-4xl leading-tight mb-6"
+                        style={{ color: "var(--ink)" }}
+                    >
+                        Aprenda mais.<br />
+                        <span style={{ color: "var(--accent)" }}>Esqueça menos.</span>
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--ink-muted)" }}>
+                        Gere flashcards com IA a partir de qualquer conteúdo e revise com repetição espaçada.
+                    </p>
                 </div>
 
-                {/* Card */}
-                <div className="bg-white/[0.03] border border-amber-600/20 rounded-2xl p-10 backdrop-blur-xl">
-                    {/* Tabs */}
-                    <div className="flex bg-white/[0.04] rounded-lg p-[3px] mb-8">
+                <div className="flex gap-6">
+                    {[
+                        { n: "10k+", label: "Flashcards gerados" },
+                        { n: "98%", label: "Taxa de retenção" },
+                        { n: "∞", label: "Fontes suportadas" },
+                    ].map(({ n, label }) => (
+                        <div key={label}>
+                            <p className="font-display text-2xl" style={{ color: "var(--accent)" }}>{n}</p>
+                            <p className="text-xs mt-0.5" style={{ color: "var(--ink-faint)" }}>{label}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Painel direito — formulário */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+
+                {/* Logo mobile */}
+                <div className="lg:hidden mb-10">
+                    <Logo />
+                </div>
+
+                <div className="w-full max-w-sm">
+                    {/* Heading */}
+                    <h1
+                        className="font-display text-3xl mb-1"
+                        style={{ color: "var(--ink)" }}
+                    >
+                        {mode === "login" ? "Bem-vindo de volta" : "Criar sua conta"}
+                    </h1>
+                    <p className="text-sm mb-8" style={{ color: "var(--ink-muted)" }}>
+                        {mode === "login" ? "Entre pra continuar estudando." : "Comece a estudar de forma inteligente."}
+                    </p>
+
+                    {/* Tab pills */}
+                    <div
+                        className="flex rounded-lg p-0.5 mb-8"
+                        style={{ background: "var(--ink-ghost)", border: "1px solid var(--rule)" }}
+                    >
                         {(["login", "register"] as Mode[]).map((m) => (
                             <button
                                 key={m}
                                 onClick={() => { setMode(m); setError("") }}
-                                className={`flex-1 py-2 text-xs font-medium rounded-md transition-all ${mode === m
-                                        ? "bg-amber-600/20 text-amber-400 border border-amber-600/30"
-                                        : "text-amber-100/40 hover:text-amber-100/60"
-                                    }`}
+                                className="flex-1 py-2 text-xs font-medium rounded-md transition-all"
+                                style={mode === m
+                                    ? { background: "var(--accent)", color: "#0e0d0b" }
+                                    : { color: "var(--ink-muted)" }
+                                }
                             >
                                 {m === "login" ? "Entrar" : "Criar conta"}
                             </button>
@@ -105,33 +130,59 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {mode === "register" && (
-                            <Field label="Nome" name="name" type="text" placeholder="Seu nome" value={form.name} onChange={handleChange} />
+                            <Field label="Nome">
+                                <input
+                                    name="name" type="text" placeholder="Seu nome"
+                                    value={form.name} onChange={handleChange} required
+                                    className="input-style"
+                                />
+                            </Field>
                         )}
-                        <Field label="Email" name="email" type="email" placeholder="seu@email.com" value={form.email} onChange={handleChange} />
-                        <Field label="Senha" name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} />
+                        <Field label="Email">
+                            <input
+                                name="email" type="email" placeholder="seu@email.com"
+                                value={form.email} onChange={handleChange} required
+                                className="input-style"
+                            />
+                        </Field>
+                        <Field label="Senha">
+                            <input
+                                name="password" type="password" placeholder="••••••••"
+                                value={form.password} onChange={handleChange} required
+                                className="input-style"
+                            />
+                        </Field>
 
                         {error && (
-                            <p className="text-red-400 text-xs">{error}</p>
+                            <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
                         )}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 mt-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-[#0d0c0a] text-sm font-medium rounded-lg transition-colors"
+                            className="w-full py-3 mt-1 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
+                            style={{ background: "var(--accent)", color: "#0e0d0b" }}
                         >
                             {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
                         </button>
                     </form>
 
-                    <div className="flex items-center gap-3 my-5">
-                        <div className="flex-1 h-px bg-amber-600/15" />
-                        <span className="text-xs text-amber-100/20">ou continue com</span>
-                        <div className="flex-1 h-px bg-amber-600/15" />
+                    <div className="flex items-center gap-3 my-6">
+                        <div className="flex-1 h-px" style={{ background: "var(--rule)" }} />
+                        <span className="text-xs" style={{ color: "var(--ink-faint)" }}>ou continue com</span>
+                        <div className="flex-1 h-px" style={{ background: "var(--rule)" }} />
                     </div>
 
                     <button
                         onClick={handleGoogle}
-                        className="w-full py-3 bg-white/[0.04] border border-amber-600/20 hover:border-amber-600/40 hover:bg-white/[0.07] rounded-lg text-amber-100/70 text-sm flex items-center justify-center gap-2 transition-all"
+                        className="w-full py-3 rounded-lg text-sm flex items-center justify-center gap-2.5 transition-all"
+                        style={{
+                            background: "var(--ink-ghost)",
+                            border: "1px solid var(--rule)",
+                            color: "var(--ink-muted)",
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.borderColor = "var(--accent-border)"}
+                        onMouseOut={(e) => e.currentTarget.style.borderColor = "var(--rule)"}
                     >
                         <GoogleIcon />
                         Google
@@ -142,28 +193,32 @@ export default function LoginPage() {
     )
 }
 
-function Field({ label, name, type, placeholder, value, onChange }: {
-    label: string
-    name: string
-    type: string
-    placeholder: string
-    value: string
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}) {
+function Logo() {
+    return (
+        <div className="flex items-center gap-2.5">
+            <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: "var(--accent)" }}
+            >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="#0e0d0b" strokeWidth={2.5} strokeLinecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+            </div>
+            <span className="font-display text-lg tracking-wide" style={{ color: "var(--ink)" }}>FlashAI</span>
+        </div>
+    )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
-            <label className="block text-[10px] font-medium tracking-widest uppercase text-amber-100/40 mb-2">
+            <label
+                className="block text-[10px] font-semibold tracking-[0.12em] uppercase mb-2"
+                style={{ color: "var(--ink-faint)" }}
+            >
                 {label}
             </label>
-            <input
-                name={name}
-                type={type}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                required
-                className="w-full px-3.5 py-2.5 bg-white/[0.04] border border-amber-600/20 focus:border-amber-600/50 rounded-lg text-amber-50 text-sm placeholder-amber-100/20 outline-none transition-colors"
-            />
+            {children}
         </div>
     )
 }

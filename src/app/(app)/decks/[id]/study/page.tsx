@@ -1,8 +1,7 @@
-// src/app/(app)/decks/[id]/study/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 
 interface Card {
@@ -25,7 +24,6 @@ const optionLabels = ["A", "B", "C", "D"] as const
 
 export default function StudyPage() {
     const { id } = useParams<{ id: string }>()
-    const router = useRouter()
 
     const [deck, setDeck] = useState<Deck | null>(null)
     const [current, setCurrent] = useState(0)
@@ -42,7 +40,7 @@ export default function StudyPage() {
 
     if (!deck) {
         return (
-            <div className="flex items-center justify-center h-64 text-amber-100/30 text-sm">
+            <div className="flex items-center justify-center h-64 text-sm" style={{ color: "var(--ink-faint)" }}>
                 Carregando...
             </div>
         )
@@ -50,7 +48,7 @@ export default function StudyPage() {
 
     const cards = deck.cards
     const card = cards[current]
-    const progress = ((current + 1) / cards.length) * 100
+    const progress = ((current) / cards.length) * 100
     const options = [card.optionA, card.optionB, card.optionC, card.optionD]
 
     function handleAnswer(letter: string) {
@@ -67,11 +65,7 @@ export default function StudyPage() {
             await fetch("/api/sessions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    deckId: id,
-                    score: newScore,
-                    total: cards.length,
-                }),
+                body: JSON.stringify({ deckId: id, score: newScore, total: cards.length }),
             })
             setSaving(false)
             setScore(newScore)
@@ -90,29 +84,40 @@ export default function StudyPage() {
         setFinished(false)
     }
 
-
     if (finished) {
-
         const pct = Math.round((score / cards.length) * 100)
         const emoji = pct === 100 ? "🏆" : pct >= 70 ? "🎉" : pct >= 40 ? "📚" : "💪"
+
         return (
-            <div className="max-w-lg mx-auto">
-                <div className="bg-white/[0.03] border border-amber-600/15 rounded-2xl p-12 text-center">
-                    <div className="text-5xl mb-5">{emoji}</div>
-                    <h1 className="font-serif text-2xl text-amber-50 mb-2">Quiz concluído!</h1>
-                    <p className="text-sm text-amber-100/40 mb-8">Veja como você foi</p>
-                    <p className="text-6xl font-medium text-amber-400 leading-none">{score}</p>
-                    <p className="text-sm text-amber-100/30 mt-2 mb-10">de {cards.length} corretos</p>
+            <div className="max-w-md mx-auto">
+                <div
+                    className="rounded-2xl p-12 text-center"
+                    style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
+                >
+                    <div className="text-5xl mb-6">{emoji}</div>
+                    <h1 className="font-display text-3xl mb-1" style={{ color: "var(--ink)" }}>Quiz concluído!</h1>
+                    <p className="text-sm mb-8" style={{ color: "var(--ink-muted)" }}>Veja como você foi</p>
+
+                    <div className="mb-2">
+                        <span className="font-display text-6xl" style={{ color: "var(--accent-bright)" }}>{score}</span>
+                        <span className="font-display text-2xl ml-1" style={{ color: "var(--ink-faint)" }}>/{cards.length}</span>
+                    </div>
+                    <p className="text-sm mb-10" style={{ color: "var(--ink-faint)" }}>
+                        {pct}% de acerto
+                    </p>
+
                     <div className="flex gap-2">
                         <Link
                             href={`/decks/${id}`}
-                            className="flex-1 py-3 border border-amber-600/25 rounded-lg text-amber-100/60 text-sm hover:border-amber-600/40 transition-colors text-center"
+                            className="flex-1 py-3 rounded-lg text-sm text-center transition-colors"
+                            style={{ border: "1px solid var(--rule)", color: "var(--ink-muted)" }}
                         >
                             Ver baralho
                         </Link>
                         <button
                             onClick={handleRestart}
-                            className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 rounded-lg text-[#0d0c0a] text-sm font-medium transition-colors"
+                            className="flex-1 py-3 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+                            style={{ background: "var(--accent)", color: "#0e0d0b" }}
                         >
                             Tentar novamente
                         </button>
@@ -124,24 +129,36 @@ export default function StudyPage() {
 
     return (
         <div className="max-w-lg mx-auto">
-            {/* Progress */}
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-amber-100/35">Card {current + 1} de {cards.length}</span>
-                <span className="text-xs text-amber-100/35">{score} correto{score !== 1 ? "s" : ""}</span>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3">
+                <div>
+                    <p className="text-xs font-medium" style={{ color: "var(--ink-muted)" }}>{deck.title}</p>
+                    <p className="text-[10px] tracking-widest uppercase mt-0.5" style={{ color: "var(--ink-faint)" }}>
+                        Card {current + 1} de {cards.length}
+                    </p>
+                </div>
+                <span className="text-xs font-semibold" style={{ color: "var(--accent-bright)" }}>
+                    {score} correto{score !== 1 ? "s" : ""}
+                </span>
             </div>
-            <div className="h-[3px] bg-white/[0.06] rounded-full mb-8 overflow-hidden">
+
+            {/* Progress bar */}
+            <div className="h-0.5 rounded-full mb-8 overflow-hidden" style={{ background: "var(--ink-ghost)" }}>
                 <div
-                    className="h-full bg-amber-600 rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%` }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%`, background: "var(--accent)" }}
                 />
             </div>
 
             {/* Pergunta */}
-            <div className="bg-white/[0.03] border border-amber-600/15 rounded-2xl p-8 mb-4">
-                <p className="text-[10px] tracking-widest uppercase text-amber-100/25 mb-4">
+            <div
+                className="rounded-2xl p-8 mb-4"
+                style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
+            >
+                <p className="text-[10px] tracking-[0.12em] uppercase font-semibold mb-4" style={{ color: "var(--ink-ghost)" }}>
                     Pergunta {current + 1}
                 </p>
-                <p className="font-serif text-lg text-amber-50 leading-relaxed">{card.question}</p>
+                <p className="font-display text-xl leading-relaxed" style={{ color: "var(--ink)" }}>{card.question}</p>
             </div>
 
             {/* Alternativas */}
@@ -152,13 +169,26 @@ export default function StudyPage() {
                     const isCorrect = card.correctOption === letter
                     const revealed = !!chosen
 
-                    let style = "border-amber-600/15 bg-white/[0.02] text-amber-100/60 hover:border-amber-600/35 hover:bg-white/[0.04] hover:text-amber-100/90"
+                    let borderColor = "var(--rule)"
+                    let bgColor = "var(--bg-card)"
+                    let textColor = "var(--ink-muted)"
+                    let badgeBg = "var(--ink-ghost)"
+                    let badgeColor = "var(--ink-faint)"
 
                     if (revealed) {
-                        if (isChosen && isCorrect) style = "border-emerald-500/40 bg-emerald-500/8 text-amber-100/90"
-                        else if (isChosen && !isCorrect) style = "border-red-500/40 bg-red-500/8 text-amber-100/50"
-                        else if (!isChosen && isCorrect) style = "border-emerald-500/30 bg-emerald-500/5 text-amber-100/70"
-                        else style = "border-amber-600/10 bg-transparent text-amber-100/30"
+                        if (isChosen && isCorrect) {
+                            borderColor = "rgba(16,185,129,0.4)"; bgColor = "rgba(16,185,129,0.06)"
+                            textColor = "var(--ink)"; badgeBg = "rgba(16,185,129,0.2)"; badgeColor = "#34d399"
+                        } else if (isChosen && !isCorrect) {
+                            borderColor = "rgba(239,68,68,0.4)"; bgColor = "rgba(239,68,68,0.06)"
+                            textColor = "var(--ink-muted)"; badgeBg = "rgba(239,68,68,0.2)"; badgeColor = "#f87171"
+                        } else if (!isChosen && isCorrect) {
+                            borderColor = "rgba(16,185,129,0.25)"; bgColor = "rgba(16,185,129,0.03)"
+                            textColor = "var(--ink-muted)"; badgeBg = "rgba(16,185,129,0.12)"; badgeColor = "#34d399"
+                        } else {
+                            borderColor = "var(--rule)"; bgColor = "transparent"
+                            textColor = "var(--ink-faint)"; badgeBg = "transparent"; badgeColor = "var(--ink-ghost)"
+                        }
                     }
 
                     return (
@@ -166,14 +196,13 @@ export default function StudyPage() {
                             key={letter}
                             onClick={() => handleAnswer(letter)}
                             disabled={!!chosen}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all ${style}`}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm text-left transition-all"
+                            style={{ borderColor, background: bgColor, color: textColor }}
                         >
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-medium shrink-0 ${revealed && isCorrect
-                                ? "bg-emerald-500/25 text-emerald-400"
-                                : revealed && isChosen && !isCorrect
-                                    ? "bg-red-500/20 text-red-400"
-                                    : "bg-white/[0.05] text-amber-100/40"
-                                }`}>
+                            <span
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-semibold shrink-0"
+                                style={{ background: badgeBg, color: badgeColor }}
+                            >
                                 {letter}
                             </span>
                             {option}
@@ -182,14 +211,15 @@ export default function StudyPage() {
                 })}
             </div>
 
-            {/* Botão próximo */}
+            {/* Próximo */}
             {chosen && (
                 <button
                     onClick={handleNext}
                     disabled={saving}
-                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 rounded-xl text-[#0d0c0a] text-sm font-medium transition-colors"
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 hover:opacity-90"
+                    style={{ background: "var(--accent)", color: "#0e0d0b" }}
                 >
-                    {saving ? "Salvando..." : current + 1 >= cards.length ? "Ver resultado" : "Próximo card →"}
+                    {saving ? "Salvando..." : current + 1 >= cards.length ? "Ver resultado" : "Próximo →"}
                 </button>
             )}
         </div>
