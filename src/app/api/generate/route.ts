@@ -4,6 +4,7 @@ import OpenAI from "openai"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { SourceType } from "@/generated/prisma"
+import { generateRatelimit } from "@/lib/ratelimit"
 
 const groq = new OpenAI({
     baseURL: "https://api.groq.com/openai/v1",
@@ -13,6 +14,22 @@ const groq = new OpenAI({
 export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+
+    const { success, limit, remaining, reset } = await generateRatelimit.limit(session.user.id)
+    if (!success) {
+        return NextResponse.json(
+            { error: `Limite diário de ${limit} gerações atingido. Tente novamente em ${new Date(reset).toLocaleTimeString("pt-BR")}.` },
+            {
+                status: 429,
+                headers: {
+                    "X-RateLimit-Limit": String(limit),
+                    "X-RateLimit-Remaining": String(remaining),
+                    "X-RateLimit-Reset": String(reset),
+                    "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+                },
+            }
+        )
+    }
 
     const { title, sourceType, content, cardCount } = await req.json()
 

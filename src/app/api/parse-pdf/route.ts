@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { pdfRatelimit } from "@/lib/ratelimit"
 
 export async function POST(req: NextRequest) {
+    const session = await auth()
+    if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+
+    const { success, limit, remaining, reset } = await pdfRatelimit.limit(session.user.id)
+    if (!success) {
+        return NextResponse.json(
+            { error: `Limite diário de ${limit} uploads de PDF atingido. Tente novamente em ${new Date(reset).toLocaleTimeString("pt-BR")}.` },
+            {
+                status: 429,
+                headers: {
+                    "X-RateLimit-Limit": String(limit),
+                    "X-RateLimit-Remaining": String(remaining),
+                    "X-RateLimit-Reset": String(reset),
+                    "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+                },
+            }
+        )
+    }
+
     const formData = await req.formData()
     const file = formData.get("file") as File | null
 
