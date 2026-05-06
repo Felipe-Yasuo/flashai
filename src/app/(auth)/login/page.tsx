@@ -96,7 +96,9 @@ export default function LoginPage() {
                     <Logo />
                 </div>
 
-                <div className="w-full max-w-sm">
+                <div className="w-full flex flex-col lg:flex-row lg:items-start lg:justify-center gap-6 max-w-2xl">
+
+                <div className="w-full max-w-sm mx-auto lg:mx-0">
                     {/* Heading */}
                     <h1
                         className="font-display text-3xl mb-1"
@@ -187,6 +189,52 @@ export default function LoginPage() {
                         <GoogleIcon />
                         Google
                     </button>
+                </div>
+
+                {/* Card de credenciais de demonstração */}
+                <div
+                    className="w-full max-w-sm mx-auto lg:mx-0 lg:w-52 shrink-0 rounded-xl p-4 lg:mt-16 self-start"
+                    style={{ background: "var(--bg-card)", border: "1px solid var(--rule)" }}
+                >
+                    <p
+                        className="text-[10px] font-semibold tracking-[0.12em] uppercase mb-3"
+                        style={{ color: "var(--ink-faint)" }}
+                    >
+                        Teste agora
+                    </p>
+                    <div className="space-y-3 mb-4">
+                        <div>
+                            <p className="text-[10px] mb-1" style={{ color: "var(--ink-faint)" }}>Email</p>
+                            <p className="text-xs font-mono break-all" style={{ color: "var(--ink-muted)" }}>
+                                admin@example.com
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] mb-1" style={{ color: "var(--ink-faint)" }}>Senha</p>
+                            <p className="text-xs font-mono" style={{ color: "var(--ink-muted)" }}>
+                                123456789
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMode("login")
+                            setForm(prev => ({ ...prev, email: "admin@example.com", password: "123456789" }))
+                        }}
+                        className="w-full py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                            background: "var(--accent-dim)",
+                            border: "1px solid var(--accent-border)",
+                            color: "var(--accent)",
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = "rgba(217,119,6,0.22)")}
+                        onMouseOut={(e) => (e.currentTarget.style.background = "var(--accent-dim)")}
+                    >
+                        Preencher automaticamente
+                    </button>
+                </div>
+
                 </div>
             </div>
         </main>
